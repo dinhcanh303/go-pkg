@@ -7,12 +7,14 @@ import (
 	"strconv"
 )
 
+// redisBitSet is a bit set implementation using Redis as the backend.
 type redisBitSet struct {
 	store redis.Cache
 	key   string
 	bits  uint
 }
 
+// newRedisBitSet creates a new redisBitSet instance.
 func newRedisBitSet(store redis.Cache, key string, bits uint) *redisBitSet {
 	return &redisBitSet{
 		store: store,
@@ -21,6 +23,7 @@ func newRedisBitSet(store redis.Cache, key string, bits uint) *redisBitSet {
 	}
 }
 
+// buildOffsetArgs builds the arguments for the Lua scripts from the given offsets.
 func (r *redisBitSet) buildOffsetArgs(offsets []uint) ([]string, error) {
 	args := make([]string, 0, len(offsets))
 
@@ -33,6 +36,7 @@ func (r *redisBitSet) buildOffsetArgs(offsets []uint) ([]string, error) {
 	return args, nil
 }
 
+// check checks if all bits at the given offsets are set.
 func (r *redisBitSet) check(ctx context.Context, offsets []uint) (bool, error) {
 	args, err := r.buildOffsetArgs(offsets)
 	if err != nil {
@@ -54,11 +58,13 @@ func (r *redisBitSet) check(ctx context.Context, offsets []uint) (bool, error) {
 
 }
 
+// del deletes the bit set from Redis.
 func (r *redisBitSet) del(ctx context.Context) error {
 	_, err := r.store.Del(ctx, r.key)
 	return err
 }
 
+// set sets the bits at the given offsets.
 func (r *redisBitSet) set(ctx context.Context, offsets []uint) error {
 	args, err := r.buildOffsetArgs(offsets)
 	if err != nil {
@@ -73,6 +79,7 @@ func (r *redisBitSet) set(ctx context.Context, offsets []uint) error {
 	return err
 }
 
+// expire sets the expiration time for the bit set.
 func (r *redisBitSet) expire(ctx context.Context, seconds int) (bool, error) {
 	return r.store.Expire(ctx, r.key, seconds)
 }

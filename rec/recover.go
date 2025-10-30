@@ -1,4 +1,4 @@
-package recover
+package rec
 
 import "github.com/pkg/errors"
 
